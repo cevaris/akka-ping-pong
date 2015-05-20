@@ -39,7 +39,8 @@ class Ping(pong: ActorRef) extends Actor with LazyLogging {
 
 class Pong() extends Actor with LazyLogging {
   def receive = {
-    case ShutdownMessage => context.system.shutdown
+    case ShutdownMessage =>
+      context.system.shutdown
     case PingMessage(step: FinalStep) =>
       logger.debug("stopping")
     case PingMessage(step: Step)  =>
@@ -50,15 +51,15 @@ class Pong() extends Actor with LazyLogging {
 
 object PingPongApp extends App with LazyLogging {
 
-  val MaxThreads = 5
-  val router = RoundRobinPool(MaxThreads)
+  val ActorCount = 5
+  val router = RoundRobinPool(ActorCount)
   val system = ActorSystem("PingPongApp")
   val pong = system.actorOf(Props[Pong].withRouter(router), name="pong")
   val ping = system.actorOf(Props(new Ping(pong)), name="ping")
 
   args.toList match {
     case steps :: Nil =>
-      for (n <- 0 until MaxThreads-1)
+      for (n <- 0 until ActorCount-1)
         ping ! StartupMessage(steps.toInt)
     case _ =>
       ping ! StartupMessage(15)
